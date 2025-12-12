@@ -1,26 +1,26 @@
 #pragma once
+#include <vector>
 #include <string>
-#include<vector>
-#include<Book.h>
-#include<User.h>
+#include "Book.h"
+#include "User.h"
+
 class Library
 {
 private:
-	std::vector<Book> books;
-	std::vector<User> users;
-	std::string dataFile;
+    std::vector<Book> books;
+    std::vector<User> users;
+    std::string dataFile;
 
 public:
-	Library(const std::string& dataFile);
-
-	void addBook(const Book& book);
-	void addUser(const User& user);
-	void borrowBook(const std::string& userName, const std::string& isbn);
-	void returnBook(const std::string& isbn);
-	Book* findBookByISBN(const std::string& isbn);
-	User* findUserByName(const std::string& name);
-	void displayAllBooks() const;
-	void displayAllUsers() const;
-	void saveToFile() const;
-	void loadFromFile();
-}
+    Library(const std::string& dataFile);
+    void addBook(const Book& book);
+    void addUser(const User& user);
+    void borrowBook(const std::string& userName, const std::string& isbn);
+    void returnBook(const std::string& isbn);
+    Book* findBookByISBN(const std::string& isbn);
+    User* findUserByName(const std::string& name);
+    void displayAllBooks() const;
+    void displayAllUsers() const;
+    void saveToFile();
+    void loadFromFile();
+};

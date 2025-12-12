@@ -1,12 +1,13 @@
 #include <iostream>
-#include <User.h>
-User::User(const std::string& name, const std::string& userId)
+#include "User.h"
+#include <vector>
+#include <string>
+User::User(const std::string name, const std::string userId)
 {
 	this->name = name;
 	this->userId = userId;
 	this->borrowedBooks = {};
 	this->maxBooksAllowed = 3;
-
 }
 std::string User::getName() const
 {

@@ -1,4 +1,7 @@
-#include <Library.h>
+#include "Library.h"
+#include <iostream>
+#include <fstream>
+#include <sstream>
 
 Library::Library(const std::string& dataFile) : dataFile(dataFile)
 {
@@ -107,15 +110,27 @@ void Library::borrowBook(const std::string& userName, const std::string& isbn)
 	user->addBook(isbn);
 	std::cout << "Книга выдана" << std::endl;
 }
+
 void Library::saveToFile()
 {
+#ifdef _WIN32
+	system("mkdir data 2>nul");
+#else
+	system("mkdir -p data 2>/dev/null");
+#endif
 	std::ofstream file(dataFile);
 	if (!file.is_open())
 	{
-		std::cout << "Ошибка загрузки файла" << std::endl;
-		return;
+		std::cout << "Ошибка с путем: " << dataFile << std::endl;
+		std::cout << "Пробую: library_data.txt" << std::endl;
+		file.open("library_data.txt");
+		if (!file) 
+		{
+			std::cout << "Ошибка сохранения" << std::endl;
+			return;
+		}
 	}
-	for (int i=0; i<books.size();i++)
+	for (int i = 0; i < books.size(); i++)
 	{
 		const Book& book = books[i];
 		file << "BOOK\n";
@@ -125,10 +140,10 @@ void Library::saveToFile()
 		file << "ISBN: " << book.getIsbn() << "\n";
 		file << "Available: " << (book.getIsAvailable() ? "yes" : "no") << "\n";
 		file << "BorrowedBy: " << book.getBorrowedBy() << "\n\n";
-	
-		
 	}
+
 	file << "---USERS---\n\n";
+
 	for (int i = 0; i < users.size(); i++)
 	{
 		const User& user = users[i];
@@ -137,23 +152,81 @@ void Library::saveToFile()
 		file << "UserID: " << user.getUserId() << "\n";
 		std::vector<std::string> borrowed = user.getBorrowedBooks();
 		file << "BorrowedBooks: ";
-		for (size_t j = 0; j < borrowed.size(); j++) {
+		for (size_t j = 0; j < borrowed.size(); j++) 
+		{
 			file << borrowed[j];
 			if (j != borrowed.size() - 1) file << "|";
 		}
 		file << "\n";
 		file << "MaxBooks: " << user.getMaxBooksAllowed() << "\n\n";
 	}
-	std::cout << "Данные сохранены" << std::endl;	
+	file.close();
+	std::cout << "Данные успешно сохранены в " << dataFile << std::endl;
 }
 void Library::loadFromFile()
 {
 	std::ifstream file(dataFile);
-	if (!file.is_open()) {
-		std::cout << "Файл не найден." << std::endl;
+	if (!file.is_open()) 
+	{
+		std::cout << "Файл не найден" << std::endl;
 		return;
 	}
-	std::cout << "Данные загружаются из файла..." << std::endl;
+	std::cout << "Загрузка данных из файла..." << std::endl;
 	books.clear();
 	users.clear();
+
+	std::string line;
+	bool readingBooks = true;
+
+	while (std::getline(file, line)) 
+	{
+		if (line.empty()) continue;
+		if (line == "---USERS---") {
+			readingBooks = false;
+			continue;
+		}
+		if (readingBooks && line == "BOOK") 
+		{
+			std::string bookData[6];
+			for (int i = 0; i < 6; i++) 
+			{
+				std::getline(file, bookData[i]);
+			}
+			std::string title = bookData[0].substr(7);
+			std::string author = bookData[1].substr(8);
+			int year = std::stoi(bookData[2].substr(6)); 
+			std::string isbn = bookData[3].substr(6);
+
+			try 
+			{
+				Book book(title, author, year, isbn);
+				books.push_back(book);
+			}
+			catch (...) 
+			{
+			}
+		}
+		else if (!readingBooks && line == "USER") 
+		{
+			std::string userData[4];
+			for (int i = 0; i < 4; i++)
+			{
+				std::getline(file, userData[i]);
+			}
+			std::string name = userData[0].substr(6);
+			std::string userId = userData[1].substr(8);
+			try 
+			{
+				User user(name, userId);
+				users.push_back(user);
+			}
+			catch (...) 
+			{
+			}
+		}
+	}
+
+	file.close();
+	std::cout << "Загружено книг: " << books.size()
+		<< ", пользователей: " << users.size() << std::endl;
 }
